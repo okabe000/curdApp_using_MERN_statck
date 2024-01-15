@@ -1,0 +1,16 @@
+using AutoExpert GPT
+__________________________
+app requirement ,a simple multi user CURD app, using MERN stack .it has these screens
+
+- profileScreen 
+here the user info is listed and ,username ,photo , if user catgorery 'provider' then the added items by this user will be listed at the bottom ,with ability to edit them
+
+- itemsScreen
+    here listed the items with fillter ,search ,sort  functionallites ,if the user catgoery is 'claimer', and if the user catergoery is 'provder' ,he will be able to see extra button to add new item ,taking him into a stacked screen to addNewItem ,then after that to a preview screen then he can confirm adding this item
+
+
+- leaderboardScreen
+    here listed the users with catogery 'proivder' , sorted by their scores
+
+ask me anything to improve clearity ,also do have any suggestion?
+__________________________

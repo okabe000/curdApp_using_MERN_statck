@@ -1,0 +1,44 @@
+# Ignore dependencies
+node_modules/
+
+# Ignore Android build output
+android/app/build/
+
+# Ignore iOS build output
+ios/Pods/
+ios/build/
+ios/Podfile.lock
+ios/Podfile.user.lock
+
+# Ignore generated files
+.vscode/
+*.iml
+*.log
+.DS_Store
+*.pbxproj
+*.xcworkspace
+*.xcuserdatad
+
+# Ignore Android/gradle wrapper
+android/gradle/wrapper/gradle-wrapper.properties
+android/gradle/wrapper/gradle-wrapper.jar
+
+# Ignore iOS/Pods installation metadata
+ios/Pods/Local Podspecs/
+
+# Ignore Android/gradle build files
+android/build/
+
+# Ignore Jest cache directory
+__tests__/__snapshots__/
+
+# Ignore yarn.lock or npm lock files
+yarn.lock
+package-lock.json
+
+# Ignore react-native-debugger config file
+rn-debugger.log
+
+# Ignore .env files (for environment variables)
+.env
+.env.production
