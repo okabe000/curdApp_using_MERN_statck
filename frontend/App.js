@@ -1,6 +1,12 @@
 import React from 'react';
-import AuthGate from './src/navigation/AuthGate';
+import AuthGateNavigator from './src/navigation/AuthGateNavigator';
+import { AuthProvider } from './src/context/AuthContext';
+
 
 export default function App() {
-  return <AuthGate/>;
-}
+  return (
+    <AuthProvider>
+      <AuthGateNavigator />
+    </AuthProvider>
+  );
+};
