@@ -3,14 +3,12 @@ const debug = require('debug')('app:database');
 
 const connectDatabase = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mern_curd_app', {
         });
         debug('Database connected successfully');
     } catch (error) {
         debug('Database connection error:', error);
-        throw error; // Rethrow to handle it outside (optional)
+        throw error;
     }
 };
 
