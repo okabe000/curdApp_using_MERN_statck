@@ -4,23 +4,61 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 
-exports.createUser = async (req, res) => {
+exports.register = async (req, res) => {
     try {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(req.body.password, salt);
+        const { username, email, password } = req.body;
 
-        const newUser = new User({...req.body, password: hashedPassword});
-        const savedUser = await newUser.save();
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        const token = jwt.sign({ id: savedUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        // Create new user
+        const user = new User({
+            username,
+            email,
+            password: hashedPassword
+        });
 
-        logger.info('User created successfully', { id: savedUser._id, email: savedUser.email });
-        res.status(201).json({ user: savedUser, token });
+        await user.save();
+
+        // Create token
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+
+        res.status(201).json({ token });
     } catch (error) {
-        logger.error('Error creating user', error);
-        res.status(400).json({ error: error.message });
+        if (error.code === 11000) {
+            // Handle duplicate key error
+            res.status(400).json({ message: 'User already exists with that email' });
+        } else {
+            res.status(500).json({ message: 'Error creating user' });
+        }
     }
 };
+
+exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Check if user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Compare password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Create token
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+
+        res.json({ token });
+    } catch (error) {
+        res.status(500).json({ message: 'Error logging in' });
+    }
+};
+
 exports.getAllUsers = async (req, res) => {
     try {
         const users = await User.find({});
