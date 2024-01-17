@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.21.0",
     "@react-native-picker/picker": "2.4.10",
     "@react-navigation/bottom-tabs": "^6.5.11",
     "@react-navigation/native": "^6.1.9",
@@ -26,7 +27,7 @@
     "axios": "^1.6.5",
     "formik": "^2.4.5",
     "react-native-elements": "^3.4.3",
-    "react-native-safe-area-context": "4.6.3",
+    "react-native-safe-area-context": "^4.6.3",
     "react-native-screens": "~3.22.0",
     "react-navigation": "^5.0.0",
     "react-redux": "^9.1.0",

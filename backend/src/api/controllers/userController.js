@@ -1,18 +1,26 @@
 const User = require('../../models/user');
 const logger = require('../../utils/logger'); // Assuming you have a logger utility
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
 
 exports.createUser = async (req, res) => {
     try {
-        const newUser = new User(req.body);
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+        const newUser = new User({...req.body, password: hashedPassword});
         const savedUser = await newUser.save();
-        logger.info('User created successfully', savedUser);
-        res.status(201).json(savedUser);
+
+        const token = jwt.sign({ id: savedUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        logger.info('User created successfully', { id: savedUser._id, email: savedUser.email });
+        res.status(201).json({ user: savedUser, token });
     } catch (error) {
         logger.error('Error creating user', error);
         res.status(400).json({ error: error.message });
     }
 };
-
 exports.getAllUsers = async (req, res) => {
     try {
         const users = await User.find({});
