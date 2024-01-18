@@ -2,9 +2,9 @@ const User = require('../../models/user');
 const logger = require('../../utils/logger'); // Assuming you have a logger utility
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+JWT_SECRET = '81c83db1bd37c6095b706d240a294e73cfb112fc6faa314d7133cd04a2f96e8b3b77e1444b68b3d179c29edcc6ff4affc6de2eb8581145c11ea38514db3933bd'
 
-
-exports.register = async (req, res) => {
+exports.createUser = async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
@@ -21,7 +21,7 @@ exports.register = async (req, res) => {
         await user.save();
 
         // Create token
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '24h' });
 
         res.status(201).json({ token });
     } catch (error) {
@@ -29,12 +29,12 @@ exports.register = async (req, res) => {
             // Handle duplicate key error
             res.status(400).json({ message: 'User already exists with that email' });
         } else {
-            res.status(500).json({ message: 'Error creating user' });
+            res.status(500).json({ message: 'Error creating user',error });
         }
     }
 };
 
-exports.login = async (req, res) => {
+exports.loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -51,7 +51,7 @@ exports.login = async (req, res) => {
         }
 
         // Create token
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '24h' });
 
         res.json({ token });
     } catch (error) {

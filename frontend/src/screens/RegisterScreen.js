@@ -19,14 +19,19 @@ const RegistrationScreen = () => {
                 body: JSON.stringify({ username, email, password }),
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Registration failed');
-
+    
+            if (!response.ok) {
+                // Handle non-OK responses (like 400 or 500 errors)
+                throw new Error(data.message || 'Registration failed due to an unknown error');
+            }
+    
             signIn(data.token);
+            // Optionally navigate to the main app screen after registration
         } catch (error) {
-            Alert.alert('Registration Error', error.message);
+            Alert.alert('Registration Error', error.message || 'An error occurred during registration');
         }
     };
-
+    
     return (
         <View style={styles.container}>
             <TextInput

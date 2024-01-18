@@ -18,11 +18,16 @@ const LoginScreen = () => {
                 body: JSON.stringify({ email, password }),
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Login failed');
-
+    
+            if (!response.ok) {
+                // Handle non-OK responses (like 400 or 500 errors)
+                throw new Error(data.message || 'Login failed due to an unknown error');
+            }
+    
             signIn(data.token);
+            // Optionally navigate to the main app screen after login
         } catch (error) {
-            Alert.alert('Login Error', error.message);
+            Alert.alert('Login Error', error.message || 'An error occurred during login');
         }
     };
 
