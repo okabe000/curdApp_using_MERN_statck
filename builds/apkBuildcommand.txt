@@ -1,0 +1,1 @@
+java -jar bundletool-all.jar build-apks --bundle=./curdapp.aab --output=./curdapp.apks --ks=./my-release-key.keystore --ks-pass=pass:Okabe0-0 --ks-key-alias=my-key-alias --key-pass=pass:Okabe0-0
