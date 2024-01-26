@@ -84,6 +84,24 @@ exports.getUserById = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+exports.getUserItems = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+                             .populate('providedItems') // Populate the providedItems
+                             .exec();
+
+        if (!user) {
+            logger.warn(`User with id ${req.params.id} not found`);
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        logger.info(`Items for user with id ${req.params.id} retrieved successfully`);
+        res.status(200).json(user.providedItems);
+    } catch (error) {
+        logger.error(`Error retrieving items for user with id ${req.params.id}`, error);
+        res.status(500).json({ error: error.message });
+    }
+};
 
 exports.updateUser = async (req, res) => {
     try {

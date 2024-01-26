@@ -14,7 +14,12 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.azoz911.frontend"
+      "bundleIdentifier": "com.azoz911.frontend",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to enhance your experience.",
+        "NSCameraUsageDescription": "This app needs access to your camera for capturing photos.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library for selecting photos."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +27,14 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.azoz911.frontend",
-      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"],
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "networkSecurityConfig": "./res/xml/network_security_config.xml"
     },
     "web": {

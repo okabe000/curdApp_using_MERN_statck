@@ -1,48 +1,83 @@
-import React, { useContext } from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
-import { AuthContext } from '../context/AuthContext'; // Adjust the path as necessary
-
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, ScrollView, Button } from 'react-native';
+import { serverDest } from '../config';
+import { AuthContext } from '../context/AuthContext';
 
 const ProfileScreen = ({ navigation }) => {
-  const { signOut } = useContext(AuthContext);
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      Alert.alert("Logged Out", "You have been successfully logged out.");
-    } catch (error) {
-      Alert.alert("Logout Error", "An error occurred while trying to log out.");
+  const [userItems, setUserItems] = useState([]);
+  const { userId, signOut } = useContext(AuthContext); // Get userId and signOut method from context
+
+  const handleRefresh = () => {
+    loadUserItems();
+  };
+
+  const loadUserItems = async () => {
+    if (userId) {
+      await fetchUserItems(userId);
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  useEffect(() => {
+    loadUserItems();
+  }, [userId]); // Dependency array includes userId
+
+  const fetchUserItems = async (userId) => {
+    try {
+      const response = await fetch(`${serverDest}/api/users/${userId}/items`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const items = await response.json();
+      setUserItems(items);
+    } catch (error) {
+      console.error('Error fetching user items:', error);
+    }
+  };
+
+  // Render user items or a message if there are none
+  const renderUserItems = () => {
+    if (userItems.length === 0) {
+      return <Text>No items found.</Text>;
+    }
+
+    return userItems.map((item, index) => (
+      <View key={index} style={styles.itemContainer}>
+        <Text style={styles.itemText}>{item.name}</Text>
+        {/* Render more item properties as needed */}
+      </View>
+    ));
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Profile</Text>
-      {/* Display user information here */}
-      {/* Button to navigate to EditItemScreen (conditionally rendered) */}
-      <Button
-        title="Edit Items"
-        onPress={() => navigation.navigate('EditItemScreen')}
-      />
-            {/* Logout Button */}
-      <Button
-        title="Logout"
-        onPress={handleLogout}
-        color="red" // Optional styling
-      />
-    </View>
+    <ScrollView contentContainerStyle={styles.container}>
+      {renderUserItems()}
+      <Button title="Refresh" onPress={handleRefresh} />
+      <Button title="Sign Out" onPress={handleSignOut} />
+    </ScrollView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    padding: 20,
   },
-  title: {
-    fontSize: 20,
-    marginBottom: 20,
+  itemContainer: {
+    width: '100%',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
+  itemText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  // Add more styles as needed
 });
 
 export default ProfileScreen;

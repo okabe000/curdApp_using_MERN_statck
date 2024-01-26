@@ -1,65 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, StatusBar } from 'react-native';
 import { serverDest } from '../config'; // Adjust the path based on your file structure
 
 const LeaderboardScreen = () => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    // Fetch the users and sort them by score
     fetchUsersAndSort();
   }, []);
 
   const fetchUsersAndSort = async () => {
-    const url = `${serverDest}/api/users`; // Replace with your actual endpoint
-    const httpMethod = 'GET';
+    // ... your existing fetch logic
+  };
 
-    try {
-        // Fetch users from your backend API using the correct endpoint and HTTP method
-        const response = await fetch(url, { method: httpMethod });
-
-        // Check if the response status code indicates success (e.g., 200 OK)
-        if (!response.ok) {
-            // If the response is not successful, throw an error with the custom message
-            throw new Error(`Failed to fetch users. Server returned ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        // Sort users by score in descending order
-        const sortedUsers = data.sort((a, b) => b.score - a.score);
-
-        // Update the state with sorted users
-        setUsers(sortedUsers);
-    } catch (error) {
-        // Log the error message explicitly
-        console.error(`Error fetching and sorting users: ${error.message}`);
-
-        // Handle different types of errors
-        if (error instanceof TypeError && error.message === 'Network request failed') {
-            console.error(`Network error. Please check your internet connection.`);
-        }
-    }
-};
-
-
-
-
-
-  const renderUserItem = ({ item }) => (
+  const renderUserItem = ({ item, index }) => (
     <View style={styles.userItem}>
-      <Text>{item.username}</Text>
-      <Text>Score: {item.score}</Text>
-      {/* Add other user information as needed */}
+      <Text style={styles.rank}>{index + 1}</Text>
+      <Text style={styles.username}>{item.username}</Text>
+      <Text style={styles.score}>Score: {item.score}</Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <Text style={styles.title}>Leaderboard</Text>
       <FlatList
         data={users}
-        keyExtractor={(item) => item._id} // Use a unique key for each user
+        keyExtractor={(item) => item._id}
         renderItem={renderUserItem}
       />
     </View>
@@ -69,20 +37,45 @@ const LeaderboardScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#f5f5f5',
+    paddingTop: StatusBar.currentHeight || 0,
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
     marginBottom: 20,
+    textAlign: 'center',
   },
   userItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    marginHorizontal: 10,
+    marginVertical: 5,
+    padding: 15,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  rank: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4a90e2',
+    marginRight: 10,
+  },
+  username: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  score: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#eb5757',
   },
 });
 

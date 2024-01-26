@@ -36,3 +36,8 @@ issues                                         |init date
 the prodcution build is not connecting to the  |1/20 8 pm
 backend                                        |
 -----------------------------------------------------------------------------
+google cloud platform required my bank card
+s,I need to make sure that the api key is 
+secured ,and if these is fee for api usage,
+and if so .I must make procations not to 
+overuse the credits                            |1/25 8 pm
