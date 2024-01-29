@@ -11,6 +11,12 @@ const itemSchema = new mongoose.Schema({
   description: { type: String, required: true },
 
   creationDate: { type: Date, default: Date.now },
+  
+  // Binary data of the image
+  image: {
+    type: Buffer,
+    required: false
+  },
 
   // Geographical location of the item in GeoJSON format - optional.
   // 'coordinates' should be in [longitude, latitude] format.

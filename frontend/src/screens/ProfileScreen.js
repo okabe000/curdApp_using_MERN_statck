@@ -1,77 +1,80 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, Button } from 'react-native';
+import { View, Text, FlatList, StyleSheet, RefreshControl, Button ,Alert} from 'react-native';
 import { serverDest } from '../config';
 import { AuthContext } from '../context/AuthContext';
 
 const ProfileScreen = ({ navigation }) => {
   const [userItems, setUserItems] = useState([]);
-  const { userId, signOut } = useContext(AuthContext); // Get userId and signOut method from context
-
-  const handleRefresh = () => {
-    loadUserItems();
-  };
-
-  const loadUserItems = async () => {
-    if (userId) {
-      await fetchUserItems(userId);
-    }
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
+  const [isLoading, setIsLoading] = useState(false);
+  const { userId } = useContext(AuthContext);
 
   useEffect(() => {
     loadUserItems();
-  }, [userId]); // Dependency array includes userId
+  }, [userId]);
 
-  const fetchUserItems = async (userId) => {
+  const loadUserItems = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch(`${serverDest}/api/users/${userId}/items`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const items = await response.json();
-      setUserItems(items);
+        const response = await fetch(`${serverDest}/api/users/${userId}/items`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setUserItems(data);
+
+        // Log the fetched items
+        console.log('Fetched Items:', data);
+        console.log('user ID:', userId);
+        console.log('endpoint :', `${serverDest}/api/users/${userId}/items`);
     } catch (error) {
-      console.error('Error fetching user items:', error);
+        Alert.alert("Error", `Failed to fetch items: ${error.message}`);
+    } finally {
+        setIsLoading(false);
     }
-  };
-
-  // Render user items or a message if there are none
-  const renderUserItems = () => {
-    if (userItems.length === 0) {
-      return <Text>No items found.</Text>;
-    }
-
-    return userItems.map((item, index) => (
-      <View key={index} style={styles.itemContainer}>
-        <Text style={styles.itemText}>{item.name}</Text>
-        {/* Render more item properties as needed */}
-      </View>
-    ));
-  };
+};
+const renderItem = ({ item }) => (
+  <View style={styles.itemContainer}>
+    <Text style={styles.itemText}>{item.name}</Text>
+    {/* Add other item details here */}
+    <Button
+      title="Edit"
+      onPress={() => navigation.navigate('EditItemScreen', { item })}
+    />
+  </View>
+);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {renderUserItems()}
-      <Button title="Refresh" onPress={handleRefresh} />
-      <Button title="Sign Out" onPress={handleSignOut} />
-    </ScrollView>
+    <View style={styles.mainContainer}>
+      <FlatList
+        data={userItems}
+        renderItem={renderItem}
+        keyExtractor={item => item._id.toString()} // Replace _id with your unique identifier
+        contentContainerStyle={styles.listContainer}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={loadUserItems} />
+        }
+        ListEmptyComponent={<Text>No items found.</Text>}
+      />
+      <Button title="Refresh" onPress={loadUserItems} />
+    </View>
   );
 };
+
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
+    flex: 1,
+  },
+  listContainer: {
     flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
     padding: 20,
   },
   itemContainer: {
-    width: '100%',
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    marginVertical: 8,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
   itemText: {
     fontSize: 16,

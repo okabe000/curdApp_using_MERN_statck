@@ -1,20 +1,20 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const itemController = require('../controllers/itemController');
 
-// POST request to create a new item
-router.post('/', itemController.createItem);
+// Set up multer for storing uploaded files
+const storage = multer.memoryStorage(); // Storing files in memory
+const upload = multer({ storage: storage });
 
-// GET request to retrieve all items
+// Corrected POST request to create a new item
+// Now using multer to handle the image file
+router.post('/', upload.single('image'), itemController.createItem);
+
+// Other routes remain unchanged
 router.get('/', itemController.getAllItems);
-
-// GET request to retrieve a single item by ID
 router.get('/:id', itemController.getItemById);
-
-// PUT request to update an item by ID
 router.put('/:id', itemController.updateItem);
-
-// DELETE request to delete an item by ID
 router.delete('/:id', itemController.deleteItem);
 
 module.exports = router;

@@ -5,6 +5,8 @@ import { decode as atob } from 'base-64';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+    const { theme } = useContext(ThemeContext); // Access the theme
+
     const [userToken, setUserToken] = useState(null);
     const [userId, setUserId] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -22,7 +24,11 @@ export const AuthProvider = ({ children }) => {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
 
-            return JSON.parse(jsonPayload);
+            const decoded = JSON.parse(jsonPayload);
+            console.log("Decoded JWT:", decoded);
+            // Use the same key as used in the JWT payload
+            setUserId(decoded.userId);
+            return decoded;
         } catch (error) {
             console.error('Error decoding token:', error);
             return null;
@@ -36,8 +42,8 @@ export const AuthProvider = ({ children }) => {
                 token = await AsyncStorage.getItem('userToken');
                 if (token) {
                     const decoded = decodeJWT(token);
-                    if (decoded) {
-                        setUserId(decoded.id); // Adjust the key according to your token structure
+                    if (decoded && decoded.userId) {
+                        setUserId(decoded.userId);
                     }
                 }
             } catch (e) {
@@ -54,8 +60,8 @@ export const AuthProvider = ({ children }) => {
         setUserToken(token);
         await AsyncStorage.setItem('userToken', token);
         const decoded = decodeJWT(token);
-        if (decoded) {
-            setUserId(decoded.id); // Adjust the key according to your token structure
+        if (decoded && decoded.userId) {
+            setUserId(decoded.userId);
         }
     };
 
@@ -66,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ userToken, userId, isLoading, signIn, signOut }}>
+        <AuthContext.Provider value={{ userToken, userId, isLoading, signIn, signOut,theme }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,4 +1,6 @@
 const User = require('../../models/user');
+const Item = require('../../models/item'); // Ensure this path is correct
+
 const logger = require('../../utils/logger'); // Assuming you have a logger utility
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -84,19 +86,21 @@ exports.getUserById = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 exports.getUserItems = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id)
-                             .populate('providedItems') // Populate the providedItems
-                             .exec();
+        const userId = req.params.id;
 
-        if (!user) {
-            logger.warn(`User with id ${req.params.id} not found`);
-            return res.status(404).json({ message: 'User not found' });
+        // Find all items where the 'providedBy' field matches the user's ID
+        const items = await Item.find({ providedBy: userId });
+
+        if (!items || items.length === 0) {
+            logger.warn(`No items found for user with id ${userId}`);
+            return res.status(404).json({ message: 'No items found' });
         }
 
-        logger.info(`Items for user with id ${req.params.id} retrieved successfully`);
-        res.status(200).json(user.providedItems);
+        logger.info(`Items for user with id ${userId} retrieved successfully`);
+        res.status(200).json(items);
     } catch (error) {
         logger.error(`Error retrieving items for user with id ${req.params.id}`, error);
         res.status(500).json({ error: error.message });

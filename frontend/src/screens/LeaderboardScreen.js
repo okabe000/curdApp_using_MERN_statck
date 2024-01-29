@@ -10,9 +10,21 @@ const LeaderboardScreen = () => {
   }, []);
 
   const fetchUsersAndSort = async () => {
-    // ... your existing fetch logic
-  };
+    try {
+      const response = await fetch(`${serverDest}/api/users`); // Replace '/users' with your API endpoint
+      const data = await response.json();
 
+      if (response.ok) {
+        const sortedUsers = data.sort((a, b) => b.score - a.score); // Assuming each user object has a 'score' field
+        setUsers(sortedUsers);
+      } else {
+        // Handle the case where the server responds with an error
+        console.error('Server responded with an error:', data.message);
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  };
   const renderUserItem = ({ item, index }) => (
     <View style={styles.userItem}>
       <Text style={styles.rank}>{index + 1}</Text>

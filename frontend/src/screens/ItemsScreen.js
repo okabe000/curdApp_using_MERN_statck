@@ -1,75 +1,218 @@
+// Import necessary modules and components
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, TextInput, TouchableOpacity } from 'react-native';
-import { serverDest } from '../config';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // or any other set
-
+import { View, Text, StyleSheet, FlatList, RefreshControl, TextInput, TouchableOpacity, Image } from 'react-native';
+import * as Location from 'expo-location'; // Import Expo's Location module
+import { serverDest } from '../config'; // Import server destination configuration
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const ItemsScreen = ({ navigation }) => {
+  // State variables
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [sortAscending, setSortAscending] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
+  const [userLocation, setUserLocation] = useState(null);
 
-  const ITEM_LIMIT = 10; // Set the item limit per page
+  // Constants
+  const ITEM_LIMIT = 3;
 
+  // Fetch items and request location permission on component mount
+  useEffect(() => {
+    requestLocationPermission();
+    fetchItems();
+  }, []);
+
+
+  // Function to calculate distances for each item
+// Function to calculate distances for each item
+const updateDistances = () => {
+  if (userLocation && items.length > 0) {
+    const updatedItems = items.map(item => {
+      let distance = calculateDistance(userLocation, item.location);
+      console.log(`Updated distance for item: ${distance}`);
+      return { ...item, distance };
+    });
+
+    setFilteredItems(updatedItems);
+  }
+};
+  
+  // Effect hook to watch for changes in userLocation
+  useEffect(() => {
+    if (userLocation) {
+      updateDistances();
+    }
+  }, [userLocation, items]);
+  
+  // Request location permission using Expo's Location module
+  const requestLocationPermission = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status === 'granted') {
+      console.log('Location permission granted');
+      getCurrentLocation();
+    } else {
+      console.log('Location permission denied');
+    }
+  };
+
+  const getCurrentLocation = async () => {
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        timeout: 5000
+      });
+      if (location) {
+        const newUserLocation = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+        setUserLocation(newUserLocation);
+      } else {
+        setUserLocation(null); // Location not available
+      }
+    } catch (error) {
+      console.error('Error getting user location:', error);
+      setUserLocation(null); // Error getting location
+    }
+  };
+  
+  
+  // Log the user's location whenever it changes
+  useEffect(() => {
+    console.log('User Location:', userLocation);
+  }, [userLocation]);
+
+  // Fetch items from the server
   useEffect(() => {
     fetchItems();
   }, []);
+
+  // Update filtered items when items change
+  useEffect(() => {
+    setFilteredItems(items);
+  }, [items]);
 
   useEffect(() => {
     setFilteredItems(items);
   }, [items]);
 
-  const fetchItems = async () => {
-    setRefreshing(true);
-    try {
-      const response = await fetch(`${serverDest}/api/items`);
-      const data = await response.json();
+  // Fetch items from the server
+// Fetch items from the server
+const fetchItems = async () => {
+  setRefreshing(true);
+  try {
+    const response = await fetch(`${serverDest}/api/items`);
+    const data = await response.json();
+    if (Array.isArray(data) && data.length > 0) {
       setItems(data);
-      setRefreshing(false);
-    } catch (error) {
-      console.error('Error fetching items:', error);
-      setRefreshing(false);
+  
+      // Log the location of the last item
+      const lastItem = data[data.length - 1];
+      console.log("Last item location:", lastItem.location);
+      
+      // Calculate distances for items
+      updateDistances();
+    } else if (data && data.error) {
+      console.error('API Error:', data.error);
+    } else {
+      console.error('Received unexpected data format:', data);
     }
-  };
+    setRefreshing(false);
+  } catch (error) {
+    console.error('Error fetching items:', error);
+    setRefreshing(false);
+  }
+};
 
+  // Sort items based on name in ascending or descending order
   const sortItems = () => {
     const sortedItems = [...filteredItems].sort((a, b) => {
       const nameA = a.name ? a.name.toLowerCase() : '';
       const nameB = b.name ? b.name.toLowerCase() : '';
       return sortAscending ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
     });
-  
+
     setFilteredItems(sortedItems);
     setSortAscending(!sortAscending);
-    setCurrentPage(0); // Reset to first page after sorting
+    setCurrentPage(0);
   };
 
+  // Handle search input and filter items based on the query
   const handleSearch = (query) => {
     setSearchQuery(query);
-    const filtered = query.trim() === '' 
-      ? items 
-      : items.filter(item => item.name && item.name.toLowerCase().includes(query.toLowerCase()));
-  
+    const filtered = query.trim() === '' ? items : items.filter(item => item.name && item.name.toLowerCase().includes(query.toLowerCase()));
+
     setFilteredItems(filtered);
-    setCurrentPage(0); // Reset to first page after search
+    setCurrentPage(0);
   };
+
+  // Calculate distance between user's location and item's location
+  const calculateDistance = (userLocation, itemLocation) => {
+    if (!userLocation || !itemLocation || 
+      !itemLocation.coordinates || itemLocation.coordinates.length < 2) {
+      return 'Location not available';
+    }
   
+    // Distance calculation logic
+    const rad = x => (x * Math.PI) / 180;
+    const R = 6371; // Earth's radius in kilometers
+    const lat1 = rad(userLocation.latitude);
+    const lon1 = rad(userLocation.longitude);
+    const lat2 = rad(itemLocation.coordinates[1]);
+    const lon2 = rad(itemLocation.coordinates[0]);
+  
+    const dLon = lon2 - lon1;
+    const dLat = lat2 - lat1;
+  
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  
+    const distance = R * c;
+    console.log(`Calculated distance for item: ${distance}`);
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <Text style={styles.itemName}>{item.name}</Text>
-      <Text style={styles.itemDescription}>{item.description}</Text>
-    </View>
-  );
+    return distance.toFixed(2);
+  };
+  const renderItem = ({ item }) => {
+    let distanceText = item.distance ? `${item.distance} km away` : 'Distance unavailable';
 
-  // Pagination Logic
+    // Check if the item has an image
+    if (item.image) {
+      return (
+        <View style={styles.itemContainer}>
+          <Image source={{ uri: `data:image/jpeg;base64,${item.image}` }} style={styles.itemImage} />
+          <View style={styles.itemInfo}>
+            <Text style={styles.itemName}>{item.name}</Text>
+            <Text style={styles.itemDescription}>{item.description}</Text>
+            <Text style={styles.distanceText}>{distanceText}</Text>
+          </View>
+        </View>
+      );
+    } else {
+      // Render "No Image" text in dark red
+      return (
+        <View style={styles.itemContainer}>
+          <View style={[styles.itemImage, { backgroundColor: 'darkred', justifyContent: 'center', alignItems: 'center' }]}>
+            <Text style={{ color: 'white', fontWeight: 'bold' }}>No Image</Text>
+          </View>
+          <View style={styles.itemInfo}>
+            <Text style={styles.itemName}>{item.name}</Text>
+            <Text style={styles.itemDescription}>{item.description}</Text>
+            <Text style={styles.distanceText}>{distanceText}</Text>
+          </View>
+        </View>
+      );
+    }
+};
+
+
+  // Get total number of pages for pagination
   const getTotalPages = () => {
     return Math.ceil(filteredItems.length / ITEM_LIMIT);
   };
 
+  // Change the current page for pagination
   const changePage = (offset) => {
     let newPage = currentPage + offset;
     if (newPage < 0) newPage = 0;
@@ -77,6 +220,7 @@ const ItemsScreen = ({ navigation }) => {
     setCurrentPage(newPage);
   };
 
+  // Slice items to display for the current page
   const sliceItemsForCurrentPage = () => {
     const start = currentPage * ITEM_LIMIT;
     return filteredItems.slice(start, start + ITEM_LIMIT);
@@ -97,10 +241,10 @@ const ItemsScreen = ({ navigation }) => {
       </View>
       <View style={styles.iconBar}>
         <TouchableOpacity onPress={sortItems}>
-             <Icon name={sortAscending ? "arrow-upward" : "arrow-downward"} size={20} color="#495867" />
-          </TouchableOpacity>
+          <Icon name={sortAscending ? "arrow-upward" : "arrow-downward"} size={20} color="#495867" />
+        </TouchableOpacity>
         <TouchableOpacity onPress={fetchItems}>
-        <Icon name="refresh" size={20} color="#495867" />
+          <Icon name="refresh" size={20} color="#495867" />
         </TouchableOpacity>
       </View>
       <View style={styles.listContainer}>
@@ -124,7 +268,6 @@ const ItemsScreen = ({ navigation }) => {
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -150,7 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   addItemButton: {
-    backgroundColor: '#E7AD99', // A different color from the provided palette
+    backgroundColor: '#E7AD99',
     padding: 10,
     borderRadius: 10,
     marginLeft: 10,
@@ -175,6 +318,16 @@ const styles = StyleSheet.create({
     borderBottomColor: '#495867',
     backgroundColor: 'white',
     marginBottom: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemImage: {
+    width: 80,
+    height: 80,
+    marginRight: 10,
+  },
+  itemInfo: {
+    flex: 1,
   },
   itemName: {
     fontSize: 16,
@@ -184,6 +337,11 @@ const styles = StyleSheet.create({
   itemDescription: {
     fontSize: 14,
     color: '#666',
+  },
+  distanceText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 5,
   },
   button: {
     backgroundColor: '#C76457',

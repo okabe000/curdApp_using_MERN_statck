@@ -2,6 +2,8 @@
 
 buildscript {
     ext {
+        googlePlayServicesVersion = '17.0.0' // Specify the version
+
         buildToolsVersion = findProperty('android.buildToolsVersion') ?: '33.0.0'
         minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '21')
         compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '33')
@@ -19,6 +21,8 @@ buildscript {
     dependencies {
         classpath('com.android.tools.build:gradle:7.4.2')
         classpath('com.facebook.react:react-native-gradle-plugin')
+        classpath 'com.google.gms:google-services:4.3.10' // Use the appropriate version
+
     }
 }
 

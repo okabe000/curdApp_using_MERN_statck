@@ -1,67 +1,125 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, Image, Dimensions, ScrollView } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import { serverDest, colorsPlate } from '../config'; // Import colorsPlate
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Assuming you're using MaterialIcons
+const windowWidth = Dimensions.get('window').width;
+
 
 const EditItemScreen = ({ route, navigation }) => {
-  if (!route.params?.item) {
-    // Handle the undefined case
-    return <Text>Item not found</Text>;
-    // Or navigate back
-    // navigation.goBack();
+  const item = route.params?.item || {}; // Ensure item is an object
 
-  }
+  const [name, setName] = useState(item.name || '');
+  const [description, setDescription] = useState(item.description || '');
+  const [location, setLocation] = useState(item.location || null);
 
-  const { item } = route.params;
-  const [name, setName] = useState(item.name);
-  const [description, setDescription] = useState(item.description);
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch(`${serverDest}/api/items/${item._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, description }),
+      });
 
-const handleSubmit = async () => {
-  try {
-    const response = await fetch(`${serverDest}/api/users/${item.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, email /* include other fields as needed */ }),
-    });
+      if (!response.ok) {
+        throw new Error('Failed to update item');
+      }
 
-    if (!response.ok) {
-      throw new Error('Failed to update user');
+      Alert.alert('Success', 'Item updated successfully');
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Error', error.message);
     }
+  };
 
-    Alert.alert('Success', 'User updated successfully');
-    navigation.goBack();
-  } catch (error) {
-    Alert.alert('Error', error.message);
-  }
-};
+  const handleSelectLocation = (e) => {
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+    setLocation({ latitude, longitude });
+  };
 
+  const initialRegion = location
+    ? {
+        latitude: location.latitude || 24.7136,
+        longitude: location.longitude || 46.6753,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      }
+    : {
+        latitude: 24.7136,
+        longitude: 46.6753,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Edit Item</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Description"
-        value={description}
-        onChangeText={setDescription}
-      />
-      <Button
-        title="Update Item"
-        onPress={handleSubmit}
-      />
-    </View>
+    <ScrollView style={styles.scrollView}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Edit Item</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Name"
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Description"
+          value={description}
+          onChangeText={setDescription}
+        />
+
+<MapView
+  style={styles.map}
+  initialRegion={initialRegion}
+  onPress={handleSelectLocation}
+>
+  {location && (
+    <Marker
+      coordinate={{
+        latitude: location.latitude || 24.7136,
+        longitude: location.longitude || 46.6753,
+      }}
+    />
+  )}
+</MapView>
+
+
+        <Button title="Update Item" onPress={handleSubmit} />
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  // Same styles as in AddItemScreen
-  // ...
+  scrollView: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 10,
+    marginBottom: 20,
+    borderRadius: 5,
+  },
+  map: {
+    width: '100%',
+    height: 200,
+    marginBottom: 20,
+  },
+  // ... Add other styles as needed
 });
 
 export default EditItemScreen;
