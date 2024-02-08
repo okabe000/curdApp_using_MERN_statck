@@ -8,7 +8,7 @@ const ProfileScreen = ({ navigation }) => {
   const [userScore, setUserScore] = useState(0);
   const [userCategory, setUserCategory] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { userId } = useContext(AuthContext);
+  const { userId, signOut } = useContext(AuthContext); // Make sure to destructure signOut here
 
 
     // Move 'loadUserProfile' outside useEffect to make it available in the component's scope
@@ -67,6 +67,8 @@ const ProfileScreen = ({ navigation }) => {
 
       <Button title="Change Password" onPress={() => navigation.navigate('ChangePasswordScreen')} />
       <Button title="Update Username" onPress={() => navigation.navigate('UpdateUsernameScreen')} />
+      <Button title="Sign Out" onPress={signOut} color="red" /> 
+
     </View>
   );
 };

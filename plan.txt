@@ -52,3 +52,7 @@ overuse the credits                            |1/25 8 pm (solved)
 
 -----------------------------------------------------------------------------
 the refresh button                             |2/8 9pm
+-----------------------------------------------------------------------------
+when the user login, and have a token,
+ this token can register him even if the user 
+ of that token is deleted !!                   |2/8         | secureity risk !
