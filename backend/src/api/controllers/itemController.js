@@ -1,11 +1,11 @@
 const Item = require('../../models/item');
 const logger = require('../../utils/logger'); // Ensure you have a logger utility
+const User = require('../../models/user'); // Ensure you have imported the User model
 
-
+const X_AMOUNT = 10; // reward to the user for adding an item
 
 exports.createItem = async (req, res) => {
     try {
-        // Construct new item data from the request body
         const newItemData = {
             name: req.body.name,
             description: req.body.description,
@@ -15,17 +15,18 @@ exports.createItem = async (req, res) => {
             // Add more fields as needed
         };
 
-        // Check if there's an image file in the request and add it to the item data
         if (req.file) {
-            // Store the image buffer directly if the image is sent as a file
             newItemData.image = req.file.buffer;
         }
 
-        // Create a new Item instance with the provided data
         const newItem = new Item(newItemData);
-
-        // Save the new item to the database
         const savedItem = await newItem.save();
+
+        // Update the User document to include this new item
+        await User.findByIdAndUpdate(savedItem.providedBy, { $push: { providedItems: savedItem._id } });
+
+        // Increment the user's score by X_AMOUNT
+        await User.findByIdAndUpdate(savedItem.providedBy, { $inc: { score: X_AMOUNT } });
 
         logger.info('Item created successfully', savedItem);
         res.status(201).json(savedItem);
@@ -34,6 +35,7 @@ exports.createItem = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
+
 exports.getAllItems = async (req, res) => {
     try {
         const items = await Item.find({});
@@ -74,11 +76,21 @@ exports.getItemById = async (req, res) => {
 };
 exports.updateItem = async (req, res) => {
     try {
-        const updatedItem = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updatedItem) {
+        const itemToUpdate = await Item.findById(req.params.id);
+        if (!itemToUpdate) {
             logger.warn(`Item with id ${req.params.id} not found for update`);
             return res.status(404).json({ message: 'Item not found' });
         }
+
+        // Example logic to handle changing the providedBy field, which is not recommended to be mutable
+        // if (req.body.providedBy && req.body.providedBy !== itemToUpdate.providedBy.toString()) {
+        //     // Remove the item from the old owner's providedItems list
+        //     await User.findByIdAndUpdate(itemToUpdate.providedBy, { $pull: { providedItems: itemToUpdate._id } });
+        //     // Add the item to the new owner's providedItems list
+        //     await User.findByIdAndUpdate(req.body.providedBy, { $push: { providedItems: itemToUpdate._id } });
+        // }
+
+        const updatedItem = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
         logger.info(`Item with id ${req.params.id} updated successfully`);
         res.status(200).json(updatedItem);
     } catch (error) {

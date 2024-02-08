@@ -106,6 +106,43 @@ exports.getUserItems = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+exports.getUserProfileInfo = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        // Assuming 'providedItems' is the correct field name that should reference user's items.
+        // Ensure this field exists in your User schema and is correctly set up to reference the Item model.
+        const user = await User.findById(userId).populate('providedItems'); // Use 'populate' to fetch related items
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // If user is found but no items are populated, log the user object to check if providedItems exists and is populated
+        console.log(`User with id ${userId} found: `, user);
+
+        // Simplify the items for the response
+        const items = user.providedItems.map(item => ({
+            name: item.name,
+            id: item._id
+            // Add other relevant item fields here
+        }));
+
+        const profileInfo = {
+            username: user.username,
+            score: user.score,
+            category: user.category,
+            items: items
+        };
+
+        // Log what is being sent back to the client
+        console.log(`Sending profile info for user ${userId}: `, profileInfo);
+
+        res.json(profileInfo);
+    } catch (error) {
+        console.error(`Error retrieving user profile info for user ${req.params.id}: `, error);
+        res.status(500).json({ message: 'Error retrieving user profile info', error });
+    }
+};
 
 exports.updateUser = async (req, res) => {
     try {

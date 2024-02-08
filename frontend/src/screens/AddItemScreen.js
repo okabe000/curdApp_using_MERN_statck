@@ -5,14 +5,10 @@ import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { serverDest } from '../config';
 import { AuthContext } from '../context/AuthContext';
-import { theme } from '../context/AuthContext'; // Adjust the path as needed
 
 const windowWidth = Dimensions.get('window').width;
 
 const AddItemScreen = ({ navigation }) => {
-  const { theme } = useContext(ThemeContext); // Assuming you have set up ThemeContext
-
-
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
@@ -126,23 +122,54 @@ const AddItemScreen = ({ navigation }) => {
     </ScrollView>
   );
 };
-const dynamicStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   scrollView: {
-    backgroundColor: theme.background,
+    backgroundColor: '#FFF',
+  },
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
   },
   title: {
-    color: theme.text,
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 20,
   },
   input: {
-    borderColor: theme.subText,
-    color: theme.text,
+    width: '100%', // Ensure the input fields take the full width
+    height: 40,
+    borderColor: '#CCC',
+    borderWidth: 1,
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+  },
+  map: {
+    width: windowWidth - 40, // Subtracting the padding from the container
+    height: 200, // Explicit height for the MapView
+    marginBottom: 20,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    marginBottom: 10,
+  },
+  progressBarContainer: {
+    width: '100%',
+    height: 20,
+    backgroundColor: '#CCC',
+    borderRadius: 5,
+    overflow: 'hidden',
+    marginBottom: 10,
   },
   progressBar: {
-    backgroundColor: theme.primary,
+    height: '100%',
+    backgroundColor: '#007BFF',
   },
-  // ... other dynamic styles
+  // Add other styles as needed
 });
-
-
 
 export default AddItemScreen;

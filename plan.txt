@@ -19,25 +19,36 @@ __________________________
 
 functionallity                                 | initation date            |Done?     |
 ------------------------------------------------------------------------------------------
-https / SSL support                            | 1/20
+basic :
+[]  profile screen
 
-- customizable styles
+extra:
+[]  https / SSL support                            
+[]  ceneralized customizable thems styles
+[]  adaptable network connection (backup server)
+[]  faster items fetching (images compressed cloud storage)
 
 security:
-- input exlpoitation filitertion
-- 
+[]  input exlpoitation filitertion
+[]  
 
 performence:
-- faster app boot
-- less app size 
+[]  faster app boot
+[]  less app size 
+- 
+
+____________________________________________________________________________________________________
 
 issues                                         |init date
 ------------------------------------------------------------------------
 the prodcution build is not connecting to the  |1/20 8 pm
-backend                                        |
+backend                                        |(solved)
 -----------------------------------------------------------------------------
 google cloud platform required my bank card
 s,I need to make sure that the api key is 
 secured ,and if these is fee for api usage,
 and if so .I must make procations not to 
-overuse the credits                            |1/25 8 pm
+overuse the credits                            |1/25 8 pm (solved)
+
+-----------------------------------------------------------------------------
+the refresh button                             |2/8 9pm

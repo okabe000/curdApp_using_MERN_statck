@@ -1,15 +1,19 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect  } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { decode as atob } from 'base-64';
-
 export const AuthContext = createContext();
+// import { ThemeContext, themes } from '../context/ThemeContext'; // Adjust the import path as needed
 
 export const AuthProvider = ({ children }) => {
-    const { theme } = useContext(ThemeContext); // Access the theme
 
     const [userToken, setUserToken] = useState(null);
     const [userId, setUserId] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+
+
+    // const toggleTheme = () => {
+    //     setTheme(theme === themes.light ? themes.dark : themes.light);
+    //   };
 
     const decodeJWT = (token) => {
         if (!token || token.split('.').length !== 3) {
@@ -72,7 +76,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ userToken, userId, isLoading, signIn, signOut,theme }}>
+        <AuthContext.Provider value={{ userToken, userId, isLoading, signIn, signOut}}>
             {children}
         </AuthContext.Provider>
     );

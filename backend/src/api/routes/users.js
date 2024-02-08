@@ -7,14 +7,16 @@ router.post('/', userController.createUser);
 // POST request for user login
 router.post('/login', userController.loginUser); // Add this line for login
 
-// GET request to retrieve items for a specific user by ID
-router.get('/:id/items', userController.getUserItems);
 
 // GET request to retrieve users
 router.get('/', userController.getAllUsers);
 
 // GET request to retrieve a single user by ID
 router.get('/:id', userController.getUserById);
+// GET request to retrieve items for a specific user by ID
+router.get('/:id/items', userController.getUserItems);
+
+router.get('/:id/profile', userController.getUserProfileInfo);
 
 // PUT request to update a user by ID
 router.put('/:id', userController.updateUser);
