@@ -8,16 +8,18 @@ JWT_SECRET = '81c83db1bd37c6095b706d240a294e73cfb112fc6faa314d7133cd04a2f96e8b3b
 
 exports.createUser = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        // Include category in the destructuring assignment
+        const { username, email, password, category } = req.body;
 
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create new user
+        // Create new user with category
         const user = new User({
             username,
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            category // Add the category field here
         });
 
         await user.save();
@@ -31,7 +33,7 @@ exports.createUser = async (req, res) => {
             // Handle duplicate key error
             res.status(400).json({ message: 'User already exists with that email' });
         } else {
-            res.status(500).json({ message: 'Error creating user',error });
+            res.status(500).json({ message: 'Error creating user', error });
         }
     }
 };
@@ -58,6 +60,39 @@ exports.loginUser = async (req, res) => {
         res.json({ token });
     } catch (error) {
         res.status(500).json({ message: 'Error logging in' });
+    }
+};
+
+exports.changeUserPassword = async (req, res) => {
+    // const { userId } = req.params; // or req.user.id if you're using authentication middleware
+    const { currentPassword, newPassword , userId} = req.body;
+    console.log("Changing password for user ID:", userId);
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: 'Current and new passwords are required.' });
+    }
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Current password is incorrect' });
+        }
+
+        // Hash new password
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedNewPassword;
+        await user.save();
+
+        res.status(200).json({ message: 'Password updated successfully' });
+    } catch (error) {
+        logger.error(`Error updating password for user with id ${userId}:`, error);
+        res.status(500).json({ message: 'Error updating password', error });
     }
 };
 

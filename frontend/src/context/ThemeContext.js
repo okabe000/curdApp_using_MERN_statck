@@ -1,61 +1,47 @@
 import React, { createContext, useContext, useState } from 'react';
 
-// Define light and dark themes
+// Define the initial themes
 const themes = {
   light: {
     colors: {
-      primary: '#007bff',
-      secondary: '#6c757d',
-      background: '#f8f9fa',
-      itemBackground: '#f9f9f9',
-      borderColor: '#ddd',
-      text: '#333',
-      buttonText: '#ffffff',
+      background: '#FFFFFF',
+      text: '#000000',
+      buttonBackground: '#E7AD99',
+      buttonTextColor: '#FFFFFF',
+      border: '#495867',
+      disabledButtonColor: 'gray',
     },
-    buttonStyles: {
-      backgroundColor: '#007bff',
-      padding: 10,
-      borderRadius: 5,
-      borderWidth: 1,
-      borderColor: '#ddd',
-    },
-    // Define other styles for light theme
   },
   dark: {
     colors: {
-      primary: '#17a2b8',
-      secondary: '#343a40',
-      background: '#343a40',
-      itemBackground: '#495057',
-      borderColor: '#ced4da',
-      text: '#f8f9fa',
-      buttonText: '#343a40',
+      background: '#121212',
+      text: '#FFFFFF',
+      buttonBackground: '#E7AD99',
+      buttonTextColor: '#FFFFFF',
+      border: '#495867',
+      disabledButtonColor: 'gray',
     },
-    buttonStyles: {
-      backgroundColor: '#17a2b8',
-      padding: 10,
-      borderRadius: 5,
-      borderWidth: 1,
-      borderColor: '#ced4da',
-    },
-    // Define other styles for dark theme
-  }
+  },
 };
 
+// Create the Theme Context
 const ThemeContext = createContext();
 
-export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(themes.light); // Default theme is light
+// Create a hook to consume the theme
+export const useTheme = () => useContext(ThemeContext);
 
-  const toggleTheme = () => {
-    setTheme(theme === themes.light ? themes.dark : themes.light);
+// Create a Theme Provider component
+export const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState(themes.light);
+
+  // Function to update the theme
+  const updateTheme = (themeName) => {
+    setTheme(themes[themeName]);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, updateTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 };
-
-export const useTheme = () => useContext(ThemeContext);

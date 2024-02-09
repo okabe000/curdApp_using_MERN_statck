@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, FlatList, StatusBar,useColorScheme } from 'react-native';
 import { serverDest } from '../config'; // Adjust the path based on your file structure
+import {themes } from '../utils/themesCenterlized'
 
 const LeaderboardScreen = () => {
+
+  const colorScheme = useColorScheme(); // 'light' or 'dark'
+  const theme = themes[colorScheme] || themes.light; // Fallback to light theme if undefined
+  const styles = getStyles(theme); // Dynamically create styles based on the theme
+
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
@@ -46,10 +52,10 @@ const LeaderboardScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.background,
     paddingTop: StatusBar.currentHeight || 0,
   },
   title: {
@@ -62,7 +68,7 @@ const styles = StyleSheet.create({
   userItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: theme.background,
     marginHorizontal: 10,
     marginVertical: 5,
     padding: 15,

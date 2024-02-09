@@ -7,6 +7,7 @@ import ItemsScreen from '../screens/ItemsScreen';
 import AddItemScreen from '../screens/AddItemScreen';
 import PreviewItemScreen from '../screens/PreviewItemScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
+import ChangeUserPasswordScreen from '../screens/ChangeUserPasswordScreen';
 
 const ProfileStack = createStackNavigator();
 const ItemsStack = createStackNavigator();
@@ -18,6 +19,7 @@ function ProfileStackScreen() {
     <ProfileStack.Navigator>
       <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} />
       <ProfileStack.Screen name="EditItemScreen" component={EditItemScreen} />
+      <ProfileStack.Screen name="ChangeUserPasswordScreen" component={ChangeUserPasswordScreen} />
     </ProfileStack.Navigator>
   );
 }

@@ -1,136 +1,376 @@
-// Imports
-import React, { useEffect, useLayoutEffect, useState, useContext } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, Button } from 'react-native';
+import React, { useEffect, useState, useLayoutEffect, useContext } from 'react';
+import { View, Text, StyleSheet, FlatList, RefreshControl, Button, TextInput, TouchableOpacity, Image, useColorScheme } from 'react-native';
 import * as Location from 'expo-location';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { serverDest } from '../config';
-import { AuthContext } from '../context/AuthContext'
+import { AuthContext } from '../context/AuthContext';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { themes } from '../utils/themesCenterlized';
+const ITEM_LIMIT = 15;
 
-// ItemsScreen component
+
 const ItemsScreen = ({ navigation }) => {
-  const { userCategory } = useContext(AuthContext); // Consume the userCategory from context
+    const colorScheme = useColorScheme();
+    const theme = themes[colorScheme] || themes.light;
+    const styles = getStyles(theme);
 
-  const [items, setItems] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
-  const [userLocation, setUserLocation] = useState(null);
+    const { userId } = useContext(AuthContext); // Use userId from AuthContext
+    const [userCategory, setUserCategory] = useState(null); // State to hold the fetched user category
+    const [items, setItems] = useState([]);
+    const [filteredItems, setFilteredItems] = useState([]);
+    const [sortAscending, setSortAscending] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(0);
+    const [userLocation, setUserLocation] = useState(null);
 
-  const useItems = () => {
-    const fetchAndCacheItems = async () => {
-      setRefreshing(true);
-      try {
-        const response = await fetch(`${serverDest}/api/items`);
-        const data = await response.json();
-        await AsyncStorage.setItem('items', JSON.stringify(data));
-        setItems(data);
-      } catch (error) {
-        console.error("Error fetching items:", error);
-        const cachedItems = await AsyncStorage.getItem('items');
-        if (cachedItems) setItems(JSON.parse(cachedItems));
-      } finally {
-        setRefreshing(false);
-      }
+    
+    useEffect(() => {
+        requestLocationPermission();
+        fetchItems();
+        fetchUserCategory(); // Fetch the user category when the component mounts
+
+    }, []);
+
+    
+    const fetchUserCategory = async () => {
+        if (!userId) return; // Ensure there's a userId to fetch category for
+        try {
+            const response = await fetch(`${serverDest}/api/users/${userId}`, {
+                headers: {
+                    // Assuming you're using a Bearer token for authorization
+                    'Authorization': `Bearer YOUR_ACCESS_TOKEN_HERE`
+                }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setUserCategory(data.category); // Set fetched user category
+            } else {
+                console.error('Failed to fetch user category:', data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching user category:', error);
+        }
     };
 
     useEffect(() => {
-      fetchAndCacheItems();
-    }, []);
+        if (userLocation) {
+            updateDistances();
+        }
+    }, [userLocation, items]);
 
-    return fetchAndCacheItems;
+    useEffect(() => {
+        console.log('User Location:', userLocation);
+    }, [userLocation]);
+
+    // Adjusted useLayoutEffect for conditional rendering based on userCategory
+    useEffect(() => {
+        if (userCategory === 'provider') {
+            navigation.setOptions({
+                headerRight: () => (
+                    <TouchableOpacity onPress={() => navigation.navigate('AddItemScreen')}>
+                        <Icon name="add" size={25} color="#495867" />
+                    </TouchableOpacity>
+                ),
+            });
+        } else {
+            navigation.setOptions({ headerRight: null });
+        }
+    }, [navigation, userCategory]);
+
+  const requestLocationPermission = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status === 'granted') {
+      console.log('Location permission granted');
+      getCurrentLocation();
+    } else {
+      console.log('Location permission denied');
+    }
   };
 
-  const useUserLocation = () => {
-    useEffect(() => {
-      const requestAndSetLocation = async () => {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          console.warn("Location permission denied");
-          return;
-        }
-
-        let location = await Location.getCurrentPositionAsync({});
-        setUserLocation({
+  const getCurrentLocation = async () => {
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        timeout: 5000
+      });
+      if (location) {
+        const newUserLocation = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
-        });
-      };
-
-      requestAndSetLocation();
-    }, []);
+        };
+        setUserLocation(newUserLocation);
+      } else {
+        setUserLocation(null);
+      }
+    } catch (error) {
+      console.error('Error getting user location:', error);
+      setUserLocation(null);
+    }
   };
 
-  useItems();
-  useUserLocation();
+  const updateDistances = () => {
+    if (userLocation && items.length > 0) {
+      const updatedItems = items.map(item => {
+        let distance = calculateDistance(userLocation, item.location);
+        console.log(`Updated distance for item: ${distance}`);
+        return { ...item, distance };
+      });
+      setFilteredItems(updatedItems);
+    }
+  };
+
+  const fetchItems = async () => {
+    setRefreshing(true);
+    try {
+      const response = await fetch(`${serverDest}/api/items`);
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setItems(data);
+        const lastItem = data[data.length - 1];
+        console.log("Last item location:", lastItem.location);
+        updateDistances();
+      } else if (data && data.error) {
+        console.error('API Error:', data.error);
+      } else {
+        console.error('Received unexpected data format:', data);
+      }
+      setRefreshing(false);
+    } catch (error) {
+      console.error('Error fetching items:', error);
+      setRefreshing(false);
+    }
+  };
+
+  const sortItems = () => {
+    const sortedItems = [...filteredItems].sort((a, b) => {
+      const nameA = a.name ? a.name.toLowerCase() : '';
+      const nameB = b.name ? b.name.toLowerCase() : '';
+      return sortAscending ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+    });
+    setFilteredItems(sortedItems);
+    setSortAscending(!sortAscending);
+    setCurrentPage(0);
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    const filtered = query.trim() === '' ? items : items.filter(item => item.name && item.name.toLowerCase().includes(query.toLowerCase()));
+    setFilteredItems(filtered);
+    setCurrentPage(0);
+  };
+
+  const calculateDistance = (userLocation, itemLocation) => {
+    if (!userLocation || !itemLocation || !itemLocation.coordinates || itemLocation.coordinates.length < 2) {
+      return 'Location not available';
+    }
+    const rad = x => (x * Math.PI) / 180;
+    const R = 6371;
+    const lat1 = rad(userLocation.latitude);
+    const lon1 = rad(userLocation.longitude);
+    const lat2 = rad(itemLocation.coordinates[1]);
+    const lon2 = rad(itemLocation.coordinates[0]);
+    const dLon = lon2 - lon1;
+    const dLat = lat2 - lat1;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    console.log(`Calculated distance for item: ${distance}`);
+    return distance.toFixed(2);
+  };
+  const renderItem = ({ item }) => {
+    let distanceText = item.distance ? `${item.distance} km away` : 'Distance unavailable';
+    return (
+        <View style={styles.itemContainer}>
+            <Image source={{ uri: `data:image/jpeg;base64,${item.image}` }} style={styles.itemImage} />
+            <View style={styles.itemInfo}>
+                <Text style={styles.itemName}>{item.name}</Text>
+                <Text style={styles.itemDescription}>{item.description}</Text>
+                <Text style={styles.distanceText}>{distanceText}</Text>
+                {userCategory === 'claimer' ? (
+                    
+                    <Button title="Request Claim" onPress={() => navigation.navigate('ReqClaimScreen', { item })} />
+                ) : null}
+            </View>
+        </View>
+    );
+};
+
+  const getTotalPages = () => {
+    return Math.ceil(filteredItems.length / ITEM_LIMIT);
+  };
+
+  const changePage = (offset) => {
+    let newPage = currentPage + offset;
+    if (newPage < 0) newPage = 0;
+    if (newPage >= getTotalPages()) newPage = getTotalPages() - 1;
+    setCurrentPage(newPage);
+  };
+
+  const sliceItemsForCurrentPage = () => {
+    const start = currentPage * ITEM_LIMIT;
+    return filteredItems.slice(start, start + ITEM_LIMIT);
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         userCategory === 'provider' ? (
-          <Button
-            onPress={() => navigation.navigate('AddItemScreen')}
-            title="Add Item"
-          />
+          <Button onPress={() => navigation.navigate('AddItemScreen')} title="Add Item" />
         ) : null
       ),
     });
-  }, [navigation, userCategory]); // Add userCategory as a dependency
-  
-  // Simplified distance calculation
-  const calculateDistance = (itemLocation) => {
-    if (!userLocation || !itemLocation || !itemLocation.coordinates) {
-      return 'N/A';
-    }
-    const distance = Math.sqrt(
-      Math.pow(userLocation.latitude - itemLocation.coordinates[0], 2) +
-      Math.pow(userLocation.longitude - itemLocation.coordinates[1], 2)
-    );
-    return `${distance.toFixed(2)} km`;
-  };
-
-  // Render item view
-
-  const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <View style={styles.itemInfo}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemDescription}>{item.description}</Text>
-        <Text style={styles.distanceText}>
-          {item.location ? calculateDistance(item.location) : 'N/A'}
-        </Text>
-        {userCategory === 'claimer' && (
-          <Button
-            onPress={() => {/* Logic to handle claim action */}}
-            title="Claim"
-          />
-        )}
-      </View>
-    </View>
-  );
+  }, [navigation, userCategory]);
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={items}
-        keyExtractor={(item) => item._id.toString()}
-        renderItem={renderItem}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={useItems}
-          />
-        }
-      />
+                    {userCategory === 'provider' && (
+                <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => navigation.navigate('AddItemScreen')}>
+                    <Text style={styles.buttonText}>Add Item</Text>
+                </TouchableOpacity>
+            )}
+      <View style={styles.header}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search items"
+          value={searchQuery}
+          onChangeText={handleSearch}
+        />
+        {/* <TouchableOpacity style={styles.addItemButton} onPress={() => navigation.navigate('AddItemScreen')}>
+          <Text style={styles.addItemButtonText}>Add Item</Text>
+        </TouchableOpacity> */}
+      </View>
+      <View style={styles.iconBar}>
+        <TouchableOpacity onPress={sortItems}>
+          <Icon name={sortAscending ? "arrow-upward" : "arrow-downward"} size={20} color="#495867" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={fetchItems}>
+          <Icon name="refresh" size={20} color="#495867" />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.listContainer}>
+        <FlatList
+          data={sliceItemsForCurrentPage()}
+          keyExtractor={item => item._id.toString()}
+          renderItem={renderItem}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchItems} />}
+        />
+        <View style={styles.pagination}>
+          <TouchableOpacity style={styles.button} onPress={() => changePage(-1)} disabled={currentPage === 0}>
+            <Text style={[styles.buttonText, currentPage === 0 && styles.disabledButton]}>Previous</Text>
+          </TouchableOpacity>
+          <Text style={styles.pageNumber}>Page {currentPage + 1} of {getTotalPages()}</Text>
+          <TouchableOpacity style={styles.button} onPress={() => changePage(1)} disabled={currentPage >= getTotalPages() - 1}>
+            <Text style={[styles.buttonText, currentPage >= getTotalPages() - 1 && styles.disabledButton]}>Next</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
 
-// Styles
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  itemContainer: { flexDirection: 'row', padding: 10, borderBottomWidth: 1, borderBottomColor: '#ddd' },
-  itemInfo: { flex: 1 },
-  itemName: { fontWeight: 'bold' },
-  itemDescription: {},
-  distanceText: {},
+const getStyles = (theme) => StyleSheet.create({
+    container: {
+    flex: 1,
+    alignItems: 'stretch',
+    justifyContent: 'flex-start',
+    padding: 2,
+    backgroundColor: theme.background,
+
+  },
+  text: {
+    color: theme.text,
+    // other styles...
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingTop: 10,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    borderColor: '#495867',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingLeft: 8,
+  },
+  addItemButton: {
+    padding: 10,
+    borderRadius: 10,
+    marginLeft: 10,
+  },
+  addItemButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  iconBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    paddingVertical: 10,
+  },
+  listContainer: {
+    flex: 1,
+    width: '100%',
+    paddingHorizontal: 2,
+  },
+  itemContainer: {
+    padding: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#495867',
+    backgroundColor: 'white',
+    marginBottom: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemImage: {
+    width: 80,
+    height: 80,
+    marginRight: 10,
+  },
+  itemInfo: {
+    flex: 1,
+  },
+  itemName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#495867',
+  },
+  itemDescription: {
+    fontSize: 14,
+    color: '#666',
+  },
+  distanceText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 5,
+  },
+  button: {
+    backgroundColor: '#C76457',
+    padding: 10,
+    borderRadius: 10,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  disabledButton: {
+    color: 'gray',
+  },
+  pagination: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '60%',
+    marginVertical: 10,
+  },
+  pageNumber: {
+    fontSize: 16,
+    color: '#495867',
+  },
 });
 
 export default ItemsScreen;

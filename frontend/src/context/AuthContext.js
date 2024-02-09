@@ -7,15 +7,13 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [userToken, setUserToken] = useState(null);
     const [userId, setUserId] = useState(null);
-    const [userCategory, setUserCategory] = useState(null); // Added userCategory state
     const [isLoading, setIsLoading] = useState(true);
 
     const decodeJWT = (token) => {
-        if (!token || token.split('.').length !== 3) {
+        if (!token || token.split('.').length < 3) {
             console.error('Invalid JWT token');
             return null;
         }
-
         try {
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -25,10 +23,6 @@ export const AuthProvider = ({ children }) => {
 
             const decoded = JSON.parse(jsonPayload);
             console.log("Decoded JWT:", decoded);
-            // Assuming the user category is part of the JWT payload
-            setUserId(decoded.userId);
-            setUserCategory(decoded.category); // Set user category from the decoded token
-            console.log(userCategory)
             return decoded;
         } catch (error) {
             console.error('Error decoding token:', error);
@@ -43,10 +37,8 @@ export const AuthProvider = ({ children }) => {
                 token = await AsyncStorage.getItem('userToken');
                 if (token) {
                     const decoded = decodeJWT(token);
-                    if (decoded) {
-                        // Set both userId and userCategory from the token
-                        setUserId(decoded.userId);
-                        setUserCategory(decoded.category);
+                    if (decoded && decoded.userId) {
+                        setUserId(decoded.userId); // Set userId based on decoded token
                     }
                 }
             } catch (e) {
@@ -63,23 +55,19 @@ export const AuthProvider = ({ children }) => {
         setUserToken(token);
         await AsyncStorage.setItem('userToken', token);
         const decoded = decodeJWT(token);
-        if (decoded) {
-            // Set both userId and userCategory upon signing in
-            setUserId(decoded.userId);
-            setUserCategory(decoded.category);
+        if (decoded && decoded.userId) {
+            setUserId(decoded.userId); // Set userId based on decoded token
         }
     };
 
     const signOut = async () => {
         setUserToken(null);
-        setUserId(null);
-        setUserCategory(null); // Clear user category on sign out
+        setUserId(null); // Clear userId on sign out
         await AsyncStorage.removeItem('userToken');
     };
 
-    // Include userCategory in the context value provided to consumers
     return (
-        <AuthContext.Provider value={{ userToken, userId, userCategory, isLoading, signIn, signOut }}>
+        <AuthContext.Provider value={{ userToken, userId, isLoading, signIn, signOut }}>
             {children}
         </AuthContext.Provider>
     );

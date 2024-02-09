@@ -20,11 +20,14 @@ __________________________
 functionallity                                 | initation date            |Done?     |
 ------------------------------------------------------------------------------------------
 basic :
-[]  profile screen
+[HALF-DONE]  profile screen
+    [][FUNC] change password 
+    [][FUNC] update username (all user info?) 
 
 extra:
 []  https / SSL support                            
-[]  ceneralized customizable thems styles
+[DONE]  ceneralized customizable thems styles
+[DONE] coniditional redendering based on the user catergoery
 []  adaptable network connection (backup server)
 []  faster items fetching (images compressed cloud storage)
 
@@ -37,6 +40,28 @@ performence:
 []  less app size 
 - 
 
+
+[#] v0.2 objectives
+[-][F] update user info 
+    [>] change password mechenism
+[=][F] autorefresh after (user add new item / an item is added to the db)
+[>][B] error faild to fetch profile data http error: 500
+[-][B] leaderboard screen : users of catergoery claimer listed in a board of providers-only list
+
+[#] v0.3 
+[-][F] compress the images in the backend before storage ,yet dont make the user wait
+[-][F] show item's image in the items screen
+[-][F] genralize the app theme
+
+{
+    maps keys
+    >       : DONE
+    =       : skipped
+    -       : NOT DONE
+    F       : FUNCTIONALILITY
+    B       : BUG
+
+}
 ____________________________________________________________________________________________________
 
 issues                                         |init date

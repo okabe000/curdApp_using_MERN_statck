@@ -13,6 +13,8 @@ router.get('/', userController.getAllUsers);
 
 // GET request to retrieve a single user by ID
 router.get('/:id', userController.getUserById);
+
+
 // GET request to retrieve items for a specific user by ID
 router.get('/:id/items', userController.getUserItems);
 
@@ -20,6 +22,8 @@ router.get('/:id/profile', userController.getUserProfileInfo);
 
 // PUT request to update a user by ID
 router.put('/:id', userController.updateUser);
+
+router.put('/:id/password', userController.changeUserPassword);
 
 // DELETE request to delete a user by ID
 router.delete('/:id', userController.deleteUser);
