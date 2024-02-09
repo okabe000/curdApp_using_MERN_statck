@@ -14,6 +14,8 @@ app.use(express.json());
 app.use(cors());
 app.use(loggerMiddleware);
 
+
+
 const generateSecret = () => crypto.randomBytes(64).toString('hex');
 const jwtSecret = generateSecret();
 console.log('JWT Secret:', jwtSecret);

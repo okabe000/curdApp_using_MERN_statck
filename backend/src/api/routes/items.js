@@ -5,7 +5,7 @@ const itemController = require('../controllers/itemController');
 
 // Set up multer for storing uploaded files
 const storage = multer.memoryStorage(); // Storing files in memory
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage }); 
 
 // Corrected POST request to create a new item
 // Now using multer to handle the image file

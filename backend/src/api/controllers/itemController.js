@@ -1,35 +1,49 @@
 const Item = require('../../models/item');
 const logger = require('../../utils/logger'); // Ensure you have a logger utility
 const User = require('../../models/user'); // Ensure you have imported the User model
+const sharp = require('sharp');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
-const X_AMOUNT = 10; // reward to the user for adding an item
+const X_AMOUNT = 10; // Reward to the user for adding an item
 
 exports.createItem = async (req, res) => {
     try {
-        const newItemData = {
-            name: req.body.name,
-            description: req.body.description,
-            location: req.body.location,
-            providedBy: req.body.providedBy,
-            tags: req.body.tags,
-            // Add more fields as needed
-        };
+        const { name, description, location, tags, userId } = req.body;
 
-        if (req.file) {
-            newItemData.image = req.file.buffer;
+        // Validate request body
+        if (!name || !description || !location || !userId) {
+            throw new Error('Missing required fields');
         }
 
+        // Process image if available
+        let compressedImageBuffer;
+        if (req.file) {
+            compressedImageBuffer = await sharp(req.file.buffer)
+                .resize(800, 600)
+                .jpeg({ quality: 10 })
+                .toBuffer();
+        }
+
+        const newItemData = {
+            name,
+            description,
+            location: typeof location === 'string' ? JSON.parse(location) : location,
+            providedBy: userId,
+            tags: typeof tags === 'string' ? JSON.parse(tags) : tags,
+            image: compressedImageBuffer || null, // Use compressed image if available
+        };
+
         const newItem = new Item(newItemData);
-        const savedItem = await newItem.save();
+        await newItem.save();
 
-        // Update the User document to include this new item
-        await User.findByIdAndUpdate(savedItem.providedBy, { $push: { providedItems: savedItem._id } });
+        // Add the item to the user's providedItems array
+        await User.findByIdAndUpdate(userId, { $push: { providedItems: newItem._id } });
 
-        // Increment the user's score by X_AMOUNT
-        await User.findByIdAndUpdate(savedItem.providedBy, { $inc: { score: X_AMOUNT } });
+        // Increment user's score by reward amount
+        await User.findByIdAndUpdate(userId, { $inc: { score: X_AMOUNT } });
 
-        logger.info('Item created successfully', savedItem);
-        res.status(201).json(savedItem);
+        res.status(201).json({ message: 'Item created successfully' });
     } catch (error) {
         logger.error('Error creating item', error);
         res.status(400).json({ error: error.message });
