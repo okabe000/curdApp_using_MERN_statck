@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, StatusBar,useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, FlatList, StatusBar,useColorScheme  } from 'react-native';
 import { serverDest } from '../config'; // Adjust the path based on your file structure
 import {themes } from '../utils/themesCenterlized'
 
@@ -55,7 +55,7 @@ const LeaderboardScreen = () => {
 const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.background,
+    backgroundColor: theme.colorsPalette.MainBackground,
     paddingTop: StatusBar.currentHeight || 0,
   },
   title: {
@@ -65,10 +65,11 @@ const getStyles = (theme) => StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
+  
   userItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.background,
+    backgroundColor: theme.colorsPalette.SecondaryBackground,
     marginHorizontal: 10,
     marginVertical: 5,
     padding: 15,
@@ -82,13 +83,13 @@ const getStyles = (theme) => StyleSheet.create({
   rank: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#4a90e2',
+    color: theme.colorsPalette.SecdText,
     marginRight: 10,
   },
   username: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: theme.colorsPalette.MainText,
   },
   score: {
     fontSize: 16,

@@ -1,6 +1,8 @@
 const express = require('express');
 const fs = require('fs'); // File system module, can be removed if not used elsewhere
 const cors = require('cors');
+const bodyParser = require('body-parser');
+
 
 const app = express();
 const loggerMiddleware = require('./src/middleware/loggerMiddleware');
@@ -15,6 +17,9 @@ app.use(cors());
 app.use(loggerMiddleware);
 
 
+// Increase the limit to, for example, '50mb'
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true, parameterLimit: 50000 }));
 
 const generateSecret = () => crypto.randomBytes(64).toString('hex');
 const jwtSecret = generateSecret();

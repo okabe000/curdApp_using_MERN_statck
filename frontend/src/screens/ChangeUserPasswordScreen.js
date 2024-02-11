@@ -1,32 +1,35 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, useColorScheme } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { serverDest } from '../config';
+import { themes } from '../utils/themesCenterlized';
+import Icon from 'react-native-vector-icons/Ionicons'; // Assuming you have Ionicons installed
 
 const ChangeUserPasswordScreen = ({ navigation }) => {
+    const colorScheme = useColorScheme();
+    const theme = themes[colorScheme] || themes.light;
+    const styles = getStyles(theme);
+
     const { userId } = useContext(AuthContext);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
 
     const handleChangePassword = async () => {
-        // Assuming you have the user's token stored in AsyncStorage
         const token = await AsyncStorage.getItem('userToken');
         if (!token) {
             Alert.alert("Error", "You must be logged in to change your password.");
             return;
         }
 
-        console.log('Attempting to change password for user ID:', userId);
-
-        const url = `${serverDest}/api/users/${userId}/password`; // Update this URL to match your API
+        const url = `${serverDest}/api/users/${userId}/password`;
         const requestOptions = {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ currentPassword, newPassword ,userId }),
+            body: JSON.stringify({ currentPassword, newPassword, userId }),
         };
 
         try {
@@ -35,7 +38,7 @@ const ChangeUserPasswordScreen = ({ navigation }) => {
 
             if (response.ok) {
                 Alert.alert("Success", "Password changed successfully.");
-                navigation.goBack(); // Navigate back to the previous screen
+                navigation.goBack();
             } else {
                 Alert.alert("Error", result.message || "An error occurred while changing the password.");
             }
@@ -47,6 +50,18 @@ const ChangeUserPasswordScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
+            <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'left',
+          padding: 10,
+        }}>
+        <Icon name="arrow-back" size={24} color={theme.colorsPalette.MainText} />
+        <Text style={{ fontSize: 16, color: theme.colorsPalette.MainText, marginLeft: 5 }}>
+          Back
+        </Text>
+      </TouchableOpacity>
             <Text style={styles.label}>Current Password:</Text>
             <TextInput
                 secureTextEntry
@@ -61,28 +76,44 @@ const ChangeUserPasswordScreen = ({ navigation }) => {
                 value={newPassword}
                 onChangeText={setNewPassword}
             />
-            <Button title="Change Password" onPress={handleChangePassword} />
+            <TouchableOpacity style={styles.button} onPress={handleChangePassword}>
+                <Text style={styles.buttonText}>Change Password</Text>
+            </TouchableOpacity>
+
         </View>
     );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
+        backgroundColor: theme.colorsPalette.MainBackground,
     },
     label: {
         fontSize: 16,
         marginBottom: 5,
+        color: theme.colorsPalette.MainText,
     },
     input: {
         fontSize: 16,
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: theme.colorsPalette.SecondaryBackground,
         marginBottom: 15,
         padding: 10,
         borderRadius: 5,
+        color: theme.colorsPalette.MainText,
+        backgroundColor: theme.colorsPalette.SecondaryBackground,
     },
+    button: {
+        ...theme.button,
+        backgroundColor: theme.colorsPalette.MainBackground, // Use button background color from theme
+        marginTop: 10,
+    },
+    buttonText: {
+        ...theme.buttonText,
+        color: theme.colorsPalette.SecdText, // Use button text color from theme
+    }
 });
 
 export default ChangeUserPasswordScreen;

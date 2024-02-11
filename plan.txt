@@ -49,7 +49,7 @@ performence:
 [-][B] leaderboard screen : users of catergoery claimer listed in a board of providers-only list
 
 [#] v0.3 
-[-][F] compress the images in the backend before storage ,yet dont make the user wait
+[-][F] compress the images before sending it to the backend
 [-][F] show item's image in the items screen
 [-][F] genralize the app theme
 

@@ -125,22 +125,28 @@ exports.getUserById = async (req, res) => {
 exports.getUserItems = async (req, res) => {
     try {
         const userId = req.params.id;
-
-        // Find all items where the 'providedBy' field matches the user's ID
         const items = await Item.find({ providedBy: userId });
 
         if (!items || items.length === 0) {
-            logger.warn(`No items found for user with id ${userId}`);
             return res.status(404).json({ message: 'No items found' });
         }
 
-        logger.info(`Items for user with id ${userId} retrieved successfully`);
-        res.status(200).json(items);
+        // Convert each item's image buffer to base64
+        const itemsWithBase64Images = items.map(item => {
+            const itemObject = item.toObject();
+            if (itemObject.image) {
+                // Convert buffer to base64 string and prepend data URI scheme
+                itemObject.image = `data:image/jpeg;base64,${itemObject.image.toString('base64')}`;
+            }
+            return itemObject;
+        });
+
+        res.status(200).json(itemsWithBase64Images);
     } catch (error) {
-        logger.error(`Error retrieving items for user with id ${req.params.id}`, error);
         res.status(500).json({ error: error.message });
     }
 };
+
 exports.getUserProfileInfo = async (req, res) => {
     try {
         const userId = req.params.id;
@@ -158,7 +164,8 @@ exports.getUserProfileInfo = async (req, res) => {
         // Simplify the items for the response
         const items = user.providedItems.map(item => ({
             name: item.name,
-            id: item._id
+            id: item._id,
+            image: item.image
             // Add other relevant item fields here
         }));
 

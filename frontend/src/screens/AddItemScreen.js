@@ -1,14 +1,23 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { ScrollView, View, Text, Button, TextInput, StyleSheet, Alert, Image, Dimensions } from 'react-native';
+import { ScrollView, View, Text, Button, TextInput, StyleSheet,useColorScheme, Alert, Image, Dimensions,TouchableOpacity} from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { serverDest } from '../config';
 import { AuthContext } from '../context/AuthContext';
+import Icon from 'react-native-vector-icons/Ionicons'; // Assuming you have Ionicons installed
+
+import { themes } from '../utils/themesCenterlized';
+
 
 const windowWidth = Dimensions.get('window').width;
 
 const AddItemScreen = ({ navigation }) => {
+  
+const colorScheme = useColorScheme();
+const theme = themes[colorScheme] || themes.light;
+const styles = getStyles(theme);
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
@@ -56,6 +65,7 @@ const AddItemScreen = ({ navigation }) => {
   
     let formData = new FormData();
     formData.append('name', name);
+    formData.append('userId', userId);
     formData.append('description', description);
     formData.append('tags', JSON.stringify(tagsArray));
     // Append location object parts separately
@@ -92,6 +102,18 @@ const AddItemScreen = ({ navigation }) => {
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'left',
+          padding: 10,
+        }}>
+        <Icon name="arrow-back" size={24} color={theme.colorsPalette.MainText} />
+        <Text style={{ fontSize: 16, color: theme.colorsPalette.MainText, marginLeft: 5 }}>
+          Back
+        </Text>
+      </TouchableOpacity>
         <Text style={styles.title}>Add New Item</Text>
         <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
         <TextInput style={styles.input} placeholder="Description" value={description} onChangeText={setDescription} />
@@ -122,7 +144,7 @@ const AddItemScreen = ({ navigation }) => {
     </ScrollView>
   );
 };
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   scrollView: {
     backgroundColor: '#FFF',
   },

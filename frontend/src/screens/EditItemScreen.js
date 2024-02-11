@@ -53,7 +53,20 @@ const EditItemScreen = ({ route, navigation }) => {
         longitudeDelta: 0.0421,
       };
 
-  return (
+  return (<View>
+          <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'left',
+          padding: 10,
+        }}>
+        <Icon name="arrow-back" size={24} color={theme.colorsPalette.MainText} />
+        <Text style={{ fontSize: 16, color: theme.colorsPalette.MainText, marginLeft: 5 }}>
+          Back
+        </Text>
+      </TouchableOpacity>
+    
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
         <Text style={styles.title}>Edit Item</Text>
@@ -89,6 +102,8 @@ const EditItemScreen = ({ route, navigation }) => {
         <Button title="Update Item" onPress={handleSubmit} />
       </View>
     </ScrollView>
+    </View>
+
   );
 };
 

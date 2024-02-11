@@ -5,6 +5,9 @@ import { serverDest } from '../config';
 import { AuthContext } from '../context/AuthContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { themes } from '../utils/themesCenterlized';
+
+import ItemCard from '../components/itemCard'; // Ensure this path is correct
+
 const ITEM_LIMIT = 15;
 
 
@@ -178,22 +181,16 @@ const ItemsScreen = ({ navigation }) => {
     return distance.toFixed(2);
   };
   const renderItem = ({ item }) => {
-    let distanceText = item.distance ? `${item.distance} km away` : 'Distance unavailable';
     return (
-        <View style={styles.itemContainer}>
-            <Image source={{ uri: `data:image/jpeg;base64,${item.image}` }} style={styles.itemImage} />
-            <View style={styles.itemInfo}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemDescription}>{item.description}</Text>
-                <Text style={styles.distanceText}>{distanceText}</Text>
-                {userCategory === 'claimer' ? (
-                    
-                    <Button title="Request Claim" onPress={() => navigation.navigate('ReqClaimScreen', { item })} />
-                ) : null}
-            </View>
-        </View>
+        <ItemCard
+            item={item}
+            theme={theme}
+            onPressClaim={() => userCategory === 'claimer' && navigation.navigate('ReqClaimScreen', { item })}
+            showClaimButton={userCategory === 'claimer'}
+        />
     );
 };
+
 
   const getTotalPages = () => {
     return Math.ceil(filteredItems.length / ITEM_LIMIT);
@@ -225,7 +222,7 @@ const ItemsScreen = ({ navigation }) => {
     <View style={styles.container}>
                     {userCategory === 'provider' && (
                 <TouchableOpacity
-                    style={styles.actionButton}
+                    style={styles.button}
                     onPress={() => navigation.navigate('AddItemScreen')}>
                     <Text style={styles.buttonText}>Add Item</Text>
                 </TouchableOpacity>
@@ -237,9 +234,7 @@ const ItemsScreen = ({ navigation }) => {
           value={searchQuery}
           onChangeText={handleSearch}
         />
-        {/* <TouchableOpacity style={styles.addItemButton} onPress={() => navigation.navigate('AddItemScreen')}>
-          <Text style={styles.addItemButtonText}>Add Item</Text>
-        </TouchableOpacity> */}
+
       </View>
       <View style={styles.iconBar}>
         <TouchableOpacity onPress={sortItems}>
@@ -250,12 +245,12 @@ const ItemsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
       <View style={styles.listContainer}>
-        <FlatList
-          data={sliceItemsForCurrentPage()}
-          keyExtractor={item => item._id.toString()}
-          renderItem={renderItem}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchItems} />}
-        />
+      <FlatList
+                data={sliceItemsForCurrentPage()}
+                keyExtractor={item => item._id.toString()}
+                renderItem={renderItem}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchItems} />}
+            />
         <View style={styles.pagination}>
           <TouchableOpacity style={styles.button} onPress={() => changePage(-1)} disabled={currentPage === 0}>
             <Text style={[styles.buttonText, currentPage === 0 && styles.disabledButton]}>Previous</Text>
@@ -269,19 +264,13 @@ const ItemsScreen = ({ navigation }) => {
     </View>
   );
 };
-
 const getStyles = (theme) => StyleSheet.create({
-    container: {
+  container: {
     flex: 1,
     alignItems: 'stretch',
     justifyContent: 'flex-start',
     padding: 2,
-    backgroundColor: theme.background,
-
-  },
-  text: {
-    color: theme.text,
-    // other styles...
+    backgroundColor: theme.colorsPalette.MainBackground, // Use MainBackground color for page background
   },
   header: {
     flexDirection: 'row',
@@ -293,19 +282,11 @@ const getStyles = (theme) => StyleSheet.create({
   searchInput: {
     flex: 1,
     height: 40,
-    borderColor: '#495867',
+    borderColor: theme.colorsPalette.SecondaryBackground, // Use SecondaryBackground color for border
     borderWidth: 1,
     borderRadius: 10,
     paddingLeft: 8,
-  },
-  addItemButton: {
-    padding: 10,
-    borderRadius: 10,
-    marginLeft: 10,
-  },
-  addItemButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: theme.colorsPalette.MainText, // Use MainText color for input text
   },
   iconBar: {
     flexDirection: 'row',
@@ -318,13 +299,14 @@ const getStyles = (theme) => StyleSheet.create({
     paddingHorizontal: 2,
   },
   itemContainer: {
-    padding: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#495867',
-    backgroundColor: 'white',
-    marginBottom: 5,
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 10,
+    marginVertical: 8,
+    backgroundColor: theme.colorsPalette.SecondaryBackground, // Use SecondaryBackground for item background
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: theme.colorsPalette.navTabBG, // Use navTabBG color for border
   },
   itemImage: {
     width: 80,
@@ -337,21 +319,22 @@ const getStyles = (theme) => StyleSheet.create({
   itemName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#495867',
+    color: theme.colorsPalette.MainText, // Use MainText color for item name
   },
   itemDescription: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colorsPalette.SecdText, // Use SecdText color for item description
   },
   distanceText: {
     fontSize: 12,
-    color: '#666',
+    color: theme.colorsPalette.SecdText, // Use SecdText color for distance text
     marginTop: 5,
+    fontWeight: 'bold',
   },
   button: {
-    backgroundColor: '#C76457',
+    backgroundColor: theme.colorsPalette.navTabActive, // Use navTabActive color for button background
     padding: 10,
-    borderRadius: 10,
+    borderRadius: 5,
   },
   buttonText: {
     color: 'white',
@@ -363,14 +346,15 @@ const getStyles = (theme) => StyleSheet.create({
   pagination: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '60%',
-    marginVertical: 10,
+    justifyContent: 'center', // Updated for center alignment
+    paddingVertical: 10,
   },
   pageNumber: {
     fontSize: 16,
-    color: '#495867',
+    color: theme.colorsPalette.MainText, // Use MainText color for page numbers
+    marginHorizontal: 10, // Add horizontal margin for spacing
   },
 });
+
 
 export default ItemsScreen;
