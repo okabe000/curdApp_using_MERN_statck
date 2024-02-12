@@ -1,7 +1,7 @@
 // src/config.js
 
 // Server Configuration
-export const serverDest = 'http://192.168.100.72:3000';
+export const serverDest = 'http://192.168.109.87:3000';
 
 // Color Themes
 export const lightTheme = {

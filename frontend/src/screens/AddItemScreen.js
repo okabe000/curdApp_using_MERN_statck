@@ -48,11 +48,13 @@ const styles = getStyles(theme);
       aspect: [4, 3],
       quality: 1,
     });
-
-    if (!result.cancelled) {
+  
+    // Updated to check for "canceled" instead of the deprecated "cancelled"
+    if (!result.canceled && result.assets) {
       setImage(result.assets[0].uri);
     }
   };
+  
 
   const handleSubmit = async () => {
     if (!name || !description || !location || !image) {

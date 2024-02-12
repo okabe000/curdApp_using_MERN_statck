@@ -1,8 +1,48 @@
 {
   "expo": {
+    "name": "curdApp",
+    "slug": "curdApp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.azoz911.curdApp",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to enhance your experience.",
+        "NSCameraUsageDescription": "This app needs access to your camera for capturing photos.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library for selecting photos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.azoz911.curdApp",
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "jsEngine": "hermes"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
     "extra": {
       "eas": {
-        "projectId": "0c68599d-8506-4fb0-86f8-31c7fd7c21b1"
+        "projectId": "87aca9f6-c84b-4368-8994-0fd66a464212"
       }
     }
   }

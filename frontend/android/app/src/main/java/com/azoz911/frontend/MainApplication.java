@@ -18,6 +18,11 @@ import expo.modules.ReactNativeHostWrapper;
 
 import java.util.List;
 
+// to enable hermes
+import com.facebook.hermes.reactexecutor.HermesExecutorFactory;
+import com.facebook.react.bridge.JavaScriptExecutorFactory;
+
+
 public class MainApplication extends Application implements ReactApplication {
 
   private final ReactNativeHost mReactNativeHost =
